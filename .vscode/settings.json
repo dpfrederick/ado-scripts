@@ -1,0 +1,19 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true,
+        "source.fixAll": false
+    },
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false,
+    "editor.rulers": [
+      80,
+    ],
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+      "package.json": "babel.config.js, webpack.config.js, .clark-certs.pem, .depcheckrc.yml, .eslintrc, .npmrc, yarn.lock, tsconfig.json, .prettierrc.yml, .iyarc",
+      "*.js": "${basename}.test.js",
+      "task.json": "taskTransform.js"
+    }
+}
