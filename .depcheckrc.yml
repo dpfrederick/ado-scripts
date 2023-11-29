@@ -1,0 +1,10 @@
+ignores:
+  - '@types/jest'
+  - '@types/jest-when'
+  - core-js
+  - cross-var
+  - improved-yarn-audit
+  - jest-when
+  - webpack-cli
+  - babel-loader
+skip-missing: true

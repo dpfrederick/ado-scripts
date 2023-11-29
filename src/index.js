@@ -9,28 +9,60 @@ class ReleaseProvider {
     this.logger = logger;
   }
 
-  async listDeployments(projectId, definitionId) {
-    return this.fetchDeployments(projectId, definitionId);
-  }
+  async listDeployments(project, definitionId) {
+    let continuationToken = 0;
+    const top = 5;
+    const deployments = []
+    let hasMore = true;
+    let requestCount = 0;
 
-  async fetchDeployments(projectId, definitionId, continuationToken = 0, deployments = []) {
-    const response = await this.releaseApi.getDeployments(projectId, definitionId, continuationToken);
+    let undefined;
+    let response;
 
-    if (response) {
-      const mappedDeployments = response.map(deploymentData => ({
-        id: deploymentData.id,
-        completedOn: deploymentData.completedOn,
-        stageDisplayName: deploymentData.releaseEnvironment,
-        status: deploymentData.operationStatus,
-      }));
+    while (hasMore) {
+      try {
+      response = await this.releaseApi.getDeployments({ 
+        project, 
+        definitionId, 
+        nullz: 0,
+        nullz: 0,
+        nullz: 0,
+        nullz: 0,
+        nullz: 0,
+        nullz: 0,
+        nullz: 0,
+        nullz: 0, 
+        top,
+        continuationToken
+      });
+      requestCount++;
 
-      deployments.push(...mappedDeployments);
+      console.log(`response: ${JSON.stringify(response, null, 2)}`);
+    } catch (err) {
+      console.log(`err: ${err}`);
+    }
 
-      if (response.length === 100) {
-        return this.fetchDeployments(projectId, definitionId, continuationToken + 100, deployments);
+      if (response && response.length > 0) {
+        const mappedDeployments = response.map(deploymentData => ({
+          id: deploymentData.id,
+          completedOn: deploymentData.completedOn,
+          stageDisplayName: deploymentData.releaseEnvironment.name,
+          status: deploymentData.operationStatus,
+        }));
+
+        deployments.push(...mappedDeployments);
+
+        if (response.length === 5) {
+          continuationToken += 5;
+        } else {
+          hasMore = false;
+        }
+      } else {
+        hasMore = false;
       }
     }
 
+    console.log(`requestCount: ${requestCount}`);
     return deployments;
   }
 }
@@ -58,9 +90,18 @@ class AzureDevOpsApiFactory {
   const releaseManager = await factory.getReleaseManager(settings.collectionUrl, settings.accessToken);
 
   const projectId = 'Webstaurantstore.com';
-  const definitionId = 11;
+  const definitionId = 5;
 
   const deployments = await releaseManager.listDeployments(projectId, definitionId);
-  console.log(deployments);
+
+  // const mappedDeployments = deployments.map((data) => ({
+  //   id: data.id,
+  //   completedOn: data.completedOn,
+  //   stageDisplayName: data.stageDisplayName.name,
+  //   status: data.status
+  // }));
+
+  console.log(JSON.stringify(deployments, null, 2)); 
+
 })();
 
