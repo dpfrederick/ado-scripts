@@ -19,31 +19,37 @@ class ReleaseProvider {
   }
 
   async listDeployments(project: string, definitionId: number): Promise<Deployment[]> {
-    let continuationToken = 0;
-    const top = 100;
-    const deployments: Deployment[] = []
+    let continuationToken: number | undefined;
+    const top = 5;
+    let deployments: Deployment[] = []
     let hasMore = true;
     let requestCount = 0;
-    let response;
 
     while (hasMore) {
-    response = await this.releaseApi.getDeployments( 
-      project, 
-      definitionId, 
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined, 
-      top,
-      continuationToken
-    );
-    requestCount++;
+      const response = await this.releaseApi.getDeployments( 
+        project,            // project
+        definitionId,       // definitionId
+        undefined,          // definitionEnvironmentId
+        undefined,          // createdBy
+        undefined,          // minModifiedTime
+        undefined,          // maxModifiedTime
+        undefined,          // deploymentStatus
+        undefined,          // operationStatus
+        undefined,          // latestAttemptsOnly
+        undefined,          // queryOrder
+        top,                // top
+        continuationToken,  // continuationToken
+        undefined,          // createdFor
+        undefined,          // minStartedTime
+        undefined,          // maxStartedTime
+        undefined           // sourceBranch
+      );
+      requestCount++;
 
       if (response && response.length > 0) {
+        if (requestCount > 1) {
+          response.shift();
+        }
         const mappedDeployments = response.map(deploymentData => ({
           id: deploymentData.id,
           completedOn: deploymentData.completedOn,
@@ -52,8 +58,9 @@ class ReleaseProvider {
         }));
         deployments.push(...mappedDeployments);
 
-        if (response.length === 5) {
-          continuationToken += 5;
+        if (response.length === top) {
+          const lastItem = response[response.length - 1];
+          continuationToken = lastItem.id;
         } else {
           hasMore = false;
         }
@@ -84,7 +91,7 @@ class AzureDevOpsApiFactory {
   const releaseManager: ReleaseProvider = await factory.getReleaseManager(settings.collectionUrl, settings.accessToken);
 
   const projectId: string = 'Webstaurantstore.com';
-  const definitionId: number = 5;
+  const definitionId: number = 11;
 
   const deployments: Deployment[] = await releaseManager.listDeployments(projectId, definitionId);
 

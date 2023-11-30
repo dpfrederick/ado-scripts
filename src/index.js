@@ -21,16 +21,34 @@ class ReleaseProvider {
     }
     listDeployments(project, definitionId) {
         return __awaiter(this, void 0, void 0, function* () {
-            let continuationToken = 0;
-            const top = 100;
-            const deployments = [];
+            let continuationToken;
+            const top = 5;
+            let deployments = [];
             let hasMore = true;
             let requestCount = 0;
-            let response;
             while (hasMore) {
-                response = yield this.releaseApi.getDeployments(project, definitionId, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, top, continuationToken);
+                const response = yield this.releaseApi.getDeployments(project, // project
+                definitionId, // definitionId
+                undefined, // definitionEnvironmentId
+                undefined, // createdBy
+                undefined, // minModifiedTime
+                undefined, // maxModifiedTime
+                undefined, // deploymentStatus
+                undefined, // operationStatus
+                undefined, // latestAttemptsOnly
+                undefined, // queryOrder
+                top, // top
+                continuationToken, // continuationToken
+                undefined, // createdFor
+                undefined, // minStartedTime
+                undefined, // maxStartedTime
+                undefined // sourceBranch
+                );
                 requestCount++;
                 if (response && response.length > 0) {
+                    if (requestCount > 1) {
+                        response.shift();
+                    }
                     const mappedDeployments = response.map(deploymentData => {
                         var _a;
                         return ({
@@ -41,8 +59,9 @@ class ReleaseProvider {
                         });
                     });
                     deployments.push(...mappedDeployments);
-                    if (response.length === 5) {
-                        continuationToken += 5;
+                    if (response.length === top) {
+                        const lastItem = response[response.length - 1];
+                        continuationToken = lastItem.id;
                     }
                     else {
                         hasMore = false;
@@ -75,7 +94,7 @@ class AzureDevOpsApiFactory {
     const factory = new AzureDevOpsApiFactory();
     const releaseManager = yield factory.getReleaseManager(settings.collectionUrl, settings.accessToken);
     const projectId = 'Webstaurantstore.com';
-    const definitionId = 5;
+    const definitionId = 11;
     const deployments = yield releaseManager.listDeployments(projectId, definitionId);
     console.log(JSON.stringify(deployments, null, 2));
 }))();
