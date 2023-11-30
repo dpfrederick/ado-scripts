@@ -15,9 +15,10 @@
     "lint:deps": "depcheck",
     "lint:task-json-schema": "node ./.local/scripts/validateTaskSchemas.js",
     "test": "jest --coverage",
-    "script": "tsc && node ./dist/index.js"
+    "script": "tsc && node ./src/index.js"
   },
   "devDependencies": {
+    "@types/node": "^20.10.1",
     "typescript": "^5.3.2"
   }
 }

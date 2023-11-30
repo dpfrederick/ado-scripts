@@ -8,52 +8,38 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const fs = require('fs');
-const { WebApi, getPersonalAccessTokenHandler } = require("azure-devops-node-api");
-const settings = JSON.parse(fs.readFileSync('src/settings.json', 'utf8'));
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = __importDefault(require("fs"));
+const azure_devops_node_api_1 = require("azure-devops-node-api");
+const settings = JSON.parse(fs_1.default.readFileSync('src/settings.json', 'utf8'));
 class ReleaseProvider {
-    constructor(releaseApi, logger) {
+    constructor(releaseApi) {
         this.releaseApi = releaseApi;
-        this.logger = logger;
     }
     listDeployments(project, definitionId) {
         return __awaiter(this, void 0, void 0, function* () {
             let continuationToken = 0;
-            const top = 5;
+            const top = 100;
             const deployments = [];
             let hasMore = true;
             let requestCount = 0;
-            let undefined;
             let response;
             while (hasMore) {
-                try {
-                    response = yield this.releaseApi.getDeployments({
-                        project,
-                        definitionId,
-                        nullz: 0,
-                        nullz: 0,
-                        nullz: 0,
-                        nullz: 0,
-                        nullz: 0,
-                        nullz: 0,
-                        nullz: 0,
-                        nullz: 0,
-                        top,
-                        continuationToken
-                    });
-                    requestCount++;
-                    console.log(`response: ${JSON.stringify(response, null, 2)}`);
-                }
-                catch (err) {
-                    console.log(`err: ${err}`);
-                }
+                response = yield this.releaseApi.getDeployments(project, definitionId, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, top, continuationToken);
+                requestCount++;
                 if (response && response.length > 0) {
-                    const mappedDeployments = response.map(deploymentData => ({
-                        id: deploymentData.id,
-                        completedOn: deploymentData.completedOn,
-                        stageDisplayName: deploymentData.releaseEnvironment.name,
-                        status: deploymentData.operationStatus,
-                    }));
+                    const mappedDeployments = response.map(deploymentData => {
+                        var _a;
+                        return ({
+                            id: deploymentData.id,
+                            completedOn: deploymentData.completedOn,
+                            stageDisplayName: (_a = deploymentData.releaseEnvironment) === null || _a === void 0 ? void 0 : _a.name,
+                            status: deploymentData.operationStatus,
+                        });
+                    });
                     deployments.push(...mappedDeployments);
                     if (response.length === 5) {
                         continuationToken += 5;
@@ -72,35 +58,24 @@ class ReleaseProvider {
     }
 }
 class AzureDevOpsApiFactory {
-    constructor(logger) {
-        this.logger = logger;
-    }
     getApi(collectionUrl, accessToken) {
         return __awaiter(this, void 0, void 0, function* () {
-            return new WebApi(collectionUrl, getPersonalAccessTokenHandler(accessToken));
+            return new azure_devops_node_api_1.WebApi(collectionUrl, (0, azure_devops_node_api_1.getPersonalAccessTokenHandler)(accessToken));
         });
     }
     getReleaseManager(collectionUrl, accessToken) {
         return __awaiter(this, void 0, void 0, function* () {
-            // const releaseApi = await this.getApi(collectionUrl, accessToken).getReleaseApi();
             const webApi = yield this.getApi(collectionUrl, accessToken);
             const releaseApi = yield webApi.getReleaseApi();
-            return new ReleaseProvider(releaseApi, this.logger);
+            return new ReleaseProvider(releaseApi);
         });
     }
 }
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    const logger = {};
-    const factory = new AzureDevOpsApiFactory(logger);
+    const factory = new AzureDevOpsApiFactory();
     const releaseManager = yield factory.getReleaseManager(settings.collectionUrl, settings.accessToken);
     const projectId = 'Webstaurantstore.com';
     const definitionId = 5;
     const deployments = yield releaseManager.listDeployments(projectId, definitionId);
-    // const mappedDeployments = deployments.map((data) => ({
-    //   id: data.id,
-    //   completedOn: data.completedOn,
-    //   stageDisplayName: data.stageDisplayName.name,
-    //   status: data.status
-    // }));
     console.log(JSON.stringify(deployments, null, 2));
 }))();
